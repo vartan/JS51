@@ -959,13 +959,15 @@ JS51.prototype.opcodes = [
   }
 },
 { // 0x42
+  //TODO: Verify order
   name        : "ORL" ,
-  description : "Logical OR Accumulator/Direct",
+  description : "Logical OR Direct/Accumulator",
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT | MODE.A,
   execute     : function(processor, trailing) {
-
+    var location = parseInt("0x"+trailing)
+    processor.getMemory(location).logicalORByte(processor.getA())
   }
 },
 { // 0x43
@@ -975,7 +977,10 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT | MODE.IMMEDIATE,
   execute     : function(processor, trailing) {
-
+    //TODO: Verify first byte is direct address, second is immediate
+    var location = parseInt("0x"+trailing.substring(0,2))
+    var immediate = parseInt("0x"+trailing.substring(2,4))
+    processor.getMemory(location).logicalOR(immediate);
   }
 },
 { // 0x44
@@ -985,6 +990,8 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.IMMEDIATE,
   execute     : function(processor, trailing) {
+    var immediate = parseInt("0x"+trailing.substring(2,4))
+    processor.getA().logicalOR(immediate);
 
   }
 },
@@ -995,7 +1002,8 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.DIRECT,
   execute     : function(processor, trailing) {
-
+    var location = parseInt("0x"+trailing)
+    processor.getA().logicalORByte(location);
   }
 },
 { // 0x46
@@ -1005,7 +1013,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR0,
   execute     : function(processor, trailing) {
-
+    processor.getA().logicalORByte(processor.registerIndirect(0));
   }
 },
 { // 0x47
@@ -1015,7 +1023,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR1,
   execute     : function(processor, trailing) {
-
+    processor.getA().logicalORByte(processor.registerIndirect(1));
   }
 },
 { // 0x48
@@ -1025,7 +1033,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R0,
   execute     : function(processor, trailing) {
-
+    processor.getA().logicalORByte(processor.getRegister(0));
   }
 },
 { // 0x49
@@ -1035,7 +1043,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R1,
   execute     : function(processor, trailing) {
-
+    processor.getA().logicalORByte(processor.getRegister(1));
   }
 },
 { // 0x4A
@@ -1045,7 +1053,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R2,
   execute     : function(processor, trailing) {
-
+    processor.getA().logicalORByte(processor.getRegister(2));
   }
 },
 { // 0x4B
@@ -1055,7 +1063,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R3,
   execute     : function(processor, trailing) {
-
+    processor.getA().logicalORByte(processor.getRegister(3));
   }
 },
 { // 0x4C
@@ -1065,7 +1073,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R4,
   execute     : function(processor, trailing) {
-
+    processor.getA().logicalORByte(processor.getRegister(4));
   }
 },
 { // 0x4D
@@ -1075,7 +1083,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R5,
   execute     : function(processor, trailing) {
-
+    processor.getA().logicalORByte(processor.getRegister(5));
   }
 },
 { // 0x4E
@@ -1085,7 +1093,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R6,
   execute     : function(processor, trailing) {
-
+    processor.getA().logicalORByte(processor.getRegister(6));
   }
 },
 { // 0x4F
@@ -1095,7 +1103,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R7,
   execute     : function(processor, trailing) {
-
+    processor.getA().logicalORByte(processor.getRegister(7));
   }
 },
 { // 0x50
@@ -1125,7 +1133,8 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT | MODE.A,
   execute     : function(processor, trailing) {
-
+    var location = parseInt("0x"+trailing);
+    processor.getMemory(location).logicalANDByte(processor.getA())
   }
 },
 { // 0x53
@@ -1135,7 +1144,9 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT | MODE.IMMEDIATE,
   execute     : function(processor, trailing) {
-
+    var location  = parseInt("0x"+trailing.substring(0,2));
+    var immediate = parseInt("0x"+trailing.substring(2,4));
+    processor.getMemory(location).logicalAND(immediate);
   }
 },
 { // 0x54
@@ -1145,122 +1156,124 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.IMMEDIATE,
   execute     : function(processor, trailing) {
-
+    var immediate = parseInt("0x"+trailing);
+    processor.getA().logicalAND(immediate);
   }
 },
 { // 0x55
-  name        : "ANL AND, Accumulator/Direct" ,
-  description : "Logical AND,",
+  name        : "ANL" ,
+  description : "Logical AND, Accumulator/Direct",
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.DIRECT,
   execute     : function(processor, trailing) {
-
+    var location = parseInt("0x"+trailing)
+    processor.getA().logicalOR(processor.getMemory(location))
   }
 },
 { // 0x56
   name        : "ANL" ,
-  description : "",
+  description : "Logical AND, Accumulator/Register 0 Indirect",
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR0,
   execute     : function(processor, trailing) {
-
+    processor.getA().logicalANDByte(processor.registerIndirect(0));
   }
 },
 { // 0x57
   name        : "ANL" ,
-  description : "",
+  description : "Logical AND, Accumulator/Register 1 Indirect",
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR1,
   execute     : function(processor, trailing) {
-
+    processor.getA().logicalANDByte(processor.registerIndirect(1));
   }
 },
 { // 0x58
   name        : "ANL" ,
-  description : "",
+  description : "Logical AND, Register 0",
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R0,
   execute     : function(processor, trailing) {
-
+    processor.getA().logicalANDByte(processor.getRegister(0));
   }
 },
 { // 0x59
   name        : "ANL" ,
-  description : "",
+  description : "Logical AND, Register 1",
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R1,
   execute     : function(processor, trailing) {
-
+    processor.getA().logicalANDByte(processor.getRegister(1));
   }
 },
 { // 0x5A
   name        : "ANL" ,
-  description : "",
+  description : "Logical AND, Register 2",
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R2,
   execute     : function(processor, trailing) {
-
+    processor.getA().logicalANDByte(processor.getRegister(2))
   }
 },
 { // 0x5B
   name        : "ANL" ,
-  description : "",
+  description : "Logical AND, Register 3",
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R3,
   execute     : function(processor, trailing) {
-
+    processor.getA().logicalANDByte(processor.getRegister(3))
   }
 },
 { // 0x5C
   name        : "ANL" ,
-  description : "",
+  description : "Logical AND, Register 4",
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R4,
   execute     : function(processor, trailing) {
-
+    processor.getA().logicalANDByte(processor.getRegister(4))
   }
 },
 { // 0x5D
   name        : "ANL" ,
-  description : "",
+  description : "Logical AND, Register 5",
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R5,
   execute     : function(processor, trailing) {
-
+    processor.getA().logicalANDByte(processor.getRegister(5))
   }
 },
 { // 0x5E
   name        : "ANL" ,
-  description : "",
+  description : "Logical AND, Register 6",
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R6,
   execute     : function(processor, trailing) {
-
+    processor.getA().logicalANDByte(processor.getRegister(6))
   }
 },
 { // 0x5F
   name        : "ANL" ,
-  description : "",
+  description : "Logical AND, Register 7",
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R7,
   execute     : function(processor, trailing) {
-
+    processor.getA().logicalANDByte(processor.getRegister(7))
   }
 },
 { // 0x60
   name        : "JZ" ,
-  description : "",
+  description : "Jump if Zero",
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.OFFSET,
@@ -1270,7 +1283,7 @@ JS51.prototype.opcodes = [
 },
 { // 0x61
   name        : "AJMP" ,
-  description : "",
+  description : "Absolute Jump",
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.ADDR11,
@@ -1280,7 +1293,7 @@ JS51.prototype.opcodes = [
 },
 { // 0x62
   name        : "XRL" ,
-  description : "",
+  description : "Logical XOR, Direct/Accumulator",
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT | MODE.A,
@@ -1290,7 +1303,7 @@ JS51.prototype.opcodes = [
 },
 { // 0x63
   name        : "XRL" ,
-  description : "",
+  description : "Logical XOR, Direct/Immediate",
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT | MODE.IMMEDIATE,
@@ -2934,14 +2947,23 @@ Byte.prototype.subtractByte = function(other) {
 Byte.prototype.subtract = function(value) {
     return this.setValue(this.getValue() - value);
 }
-Byte.logicalOR = function(other) {
+Byte.logicalORByte = function(other) {
     return this.setValue(this.getValue() | other.getValue())
 }
-Byte.logicalAND = function(other) {
+Byte.logicalOR = function(value) {
+    return this.setValue(this.getValue() | value)
+}
+Byte.logicalANDByte = function(other) {
     return this.setValue(this.getValue() & other.getValue())
 }
-Byte.logicalXOR = function(other) {
+Byte.logicalAND = function(value) {
+    return this.setValue(this.getValue() & value)
+}
+Byte.logicalXORByte = function(other) {
     return this.setValue(this.getValue() ^ other.getValue())
+}
+Byte.logicalXOR = function(value) {
+    return this.setValue(this.getValue() ^ value)
 }
 
 Byte.prototype.multiplyBytes = function(other) {
