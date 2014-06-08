@@ -191,6 +191,9 @@ JS51.prototype.popValue = function() {
   stackPointer.decrement();
   return value;
 }
+JS51.prototype.calculateAdditionFlags = function(operand1, operand2) {
+  //TODO: Implement flags here
+}
 JS51.prototype.opcodes = [
 { // 0x00
   name        : "NOP" ,
