@@ -14,7 +14,7 @@ function JS51() {
 JS51.prototype.fetch = function() {
   if(this.PC >= this._ROM.length)
     throw "Ran past program size."
-  var op = parseInt("0x"+(this.PC)]);
+  var op = parseInt("0x"+this._ROM[this.PC]);
   decode(op);
 }
 JS51.prototype.decode = function(op) {
