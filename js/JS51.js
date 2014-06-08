@@ -1,74 +1,35 @@
 /**
- * 8051 Emulator
+ * 8051 Processor Emulator
  */
 function JS51() {
    this.defineRegisters();
-   this._ROM = new Array(0);
+   this._ROM = new Array(256);
    this._memory = new Array(256);
+   this.PC = 0;
    for(var i=0; i < this.memory.length; i++) {
-      this._memory[i] = 0;
+      this._memory[i] = new Byte(0);
    }
 }
+
+JS51.prototype.fetch = function() {
+  if(this.PC >= this._ROM.length)
+    throw "Ran past program size."
+  var op = parseInt("0x"+(this.PC)]);
+  decode(op);
+}
+JS51.prototype.decode = function(op) {
+  var opcode = this.opcodes[op];
+  var machineCode = "";
+  for(var i = 0; i < opcode.bytes; i++)
+    machineCode += _ROM[this.PC++];
+  }
+  opcode.execute(machineCode);
+}
+
 /**
  * Dictionary/enum of all addressing modes
  * @type {Enum}
  */
-var MODE =
-{
-  NONE         : 0;
-  ADDR11       : 1 << 0,
-  ADDR16       : 1 << 1,
-  A            : 1 << 2,
-  DIRECT       : 1 << 3,
-  R0           : 1 << 4,
-  R1           : 1 << 5,
-  R2           : 1 << 6,
-  R3           : 1 << 7,
-  R4           : 1 << 8,
-  R5           : 1 << 9,
-  R6           : 1 << 10,
-  R7           : 1 << 11,
-  BIT          : 1 << 12,
-  OFFSET       : 1 << 13,
-  INDIRECTR0   : 1 << 14,
-  INDIRECTR1   : 1 << 15,
-  INDIRECTDPTR : 1 << 16,
-  IMMEDIATE    : 1 << 17
-}
-var REG = {
-  P0    : 0x80, // Port 0
-  SP    : 0x81, // Stack Pointer
-  DPL   : 0x82, // Data pointer low
-  DPH   : 0x83, // Data Pointer High
-  PCON  : 0x87, // Power Control
-  TCON  : 0x88, // Timer Control
-  TMOD  : 0x89, // Timer Mode
-  TL0   : 0x8A, // Timer 0: Low Byte
-  TL1   : 0x8B, // Timer 1: Low Byte
-  TH0   : 0x8C, // Timer 0: High Byte
-  TH1   : 0x8D, // Timer 1: High Byte
-  P1    : 0x90, // Port 1
-  SCON  : 0x98, // Serial Configuration
-  SBUF  : 0x99, // Serial Buffer
-  P2    : 0xA0, // Port 2
-  IE    : 0xA8, // Interrupt Enable
-  P3    : 0xB0, // Port 3
-  IP    : 0xB8, // Interrupt Priority
-  PSW   : 0xD0, // Program Status Word
-  A     : 0xE0, // Accumulator
-  B     : 0xF0  // B Register
-}
-var BIT = {
-  CY   : 0x07,  // Carry flag
-  AC   : 0x06,  // Auxillary Carry Flag (BCD)
-  F0   : 0x05,  // Flag 0 (general purpose)
-  RS1  : 0x04,  // Register Select 1
-  RS0  : 0x03,  // Register Select 0
-  OV   : 0x02,  // Overflow Flag
-  UD   : 0x01,  // User Defined Flag
-  P    : 0x00   // Parity Flag
-}
-
 JS51.prototype.getMemory = function(address) {
   switch(address) {
   default:
@@ -86,19 +47,20 @@ JS51.prototype.setMemory = function(address, value) {
 JS51.prototype.getRegister = function(registerNumber) {
   if(registerNumber > 7)
     throw "Invalid register number";
-  var registerStart = 16 * this.PSW().getBit(BIT.RS1) +
-                      8  * this.PSW().getBit(BIT.RS0);
+  var registerStart = 16 * this.getPSW().getBit(BIT.RS1) +
+                      8  * this.getPSW().getBit(BIT.RS0);
   return this.getMemory(registerNumber+registerStart);
 }
-JS51.prototype.A = function() {
+JS51.prototype.getA = function() {
   return this.getMemory(REG.A);
 }
-JS51.prototype.B = function() {
+JS51.prototype.getB = function() {
   return this.getMemory(REG.B);
 }
-JS51.prototype.PSW = function() {
+JS51.prototype.getPSW = function() {
   return this.getMemory(REG.PSW);
 }
+
 
 JS51.prototype.opcodes = [
 { // 0x0
@@ -107,7 +69,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.NONE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -117,7 +79,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.ADDR11,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -127,7 +89,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.ADDR16,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -137,7 +99,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -147,7 +109,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -157,7 +119,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -167,7 +129,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.INDIRECTR0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -177,7 +139,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.INDIRECTR1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -187,7 +149,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -197,7 +159,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -207,7 +169,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R2,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -217,7 +179,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R3,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -227,7 +189,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R4,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -237,7 +199,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R5,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -247,7 +209,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R6,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -257,7 +219,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R7,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -267,7 +229,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.BIT | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -277,7 +239,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.ADDR11,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -287,7 +249,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.ADDR16,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -297,7 +259,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -307,7 +269,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -317,7 +279,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -327,7 +289,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.INDIRECTR0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -337,7 +299,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.INDIRECTR1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -347,7 +309,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -357,7 +319,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -367,7 +329,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R2,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -377,7 +339,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R3,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -387,7 +349,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R4,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -397,7 +359,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R5,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -407,7 +369,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R6,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -417,7 +379,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R7,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -427,7 +389,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.BIT | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -437,7 +399,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.ADDR11,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -447,7 +409,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.NONE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -457,7 +419,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -467,7 +429,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.IMMEDIATE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -477,7 +439,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.DIRECT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -487,7 +449,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -497,7 +459,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -507,7 +469,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -517,7 +479,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -527,7 +489,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R2,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -537,7 +499,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R3,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -547,7 +509,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R4,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -557,7 +519,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R5,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -567,7 +529,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R6,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -577,7 +539,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R7,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -587,7 +549,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.BIT | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -597,7 +559,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.ADDR11,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -607,7 +569,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.NONE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -617,7 +579,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -627,7 +589,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.IMMEDIATE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -637,7 +599,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.DIRECT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -647,7 +609,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -657,7 +619,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -667,7 +629,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -677,7 +639,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -687,7 +649,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R2,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -697,7 +659,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R3,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -707,7 +669,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R4,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -717,7 +679,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R5,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -727,7 +689,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R6,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -737,7 +699,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R7,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -747,7 +709,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -757,7 +719,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.ADDR11,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -767,7 +729,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT, A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -777,7 +739,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT | MODE.IMMEDIATE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -787,7 +749,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.IMMEDIATE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -797,7 +759,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.DIRECT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -807,7 +769,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -817,7 +779,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -827,7 +789,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -837,7 +799,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -847,7 +809,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R2,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -857,7 +819,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R3,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -867,7 +829,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R4,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -877,7 +839,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R5,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -887,7 +849,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R6,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -897,7 +859,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R7,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -907,7 +869,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -917,7 +879,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.ADDR11,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -927,7 +889,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT | Mode.A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -937,7 +899,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT | MODE.IMMEDIATE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -947,7 +909,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.IMMEDIATE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -957,7 +919,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.DIRECT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -967,7 +929,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -977,7 +939,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -987,7 +949,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -997,7 +959,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1007,7 +969,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R2,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1017,7 +979,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R3,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1027,7 +989,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R4,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1037,7 +999,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R5,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1047,7 +1009,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R6,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1057,7 +1019,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R7,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1067,7 +1029,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1077,7 +1039,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.ADDR11,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1087,7 +1049,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT, A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1097,7 +1059,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT | MODE.IMMEDIATE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1107,7 +1069,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.IMMEDIATE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1117,7 +1079,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.DIRECT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1127,7 +1089,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1137,7 +1099,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1147,7 +1109,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1157,7 +1119,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1167,7 +1129,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R2,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1177,7 +1139,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R3,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1187,7 +1149,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R4,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1197,7 +1159,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R5,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1207,7 +1169,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R6,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1217,7 +1179,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R7,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1227,7 +1189,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1237,7 +1199,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.ADDR11,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1247,7 +1209,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.C, BIT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1257,7 +1219,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.@A+DPTR,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1267,7 +1229,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.IMMEDIATE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1277,7 +1239,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT | MODE.IMMEDIATE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1287,7 +1249,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.INDIRECTR0 | MODE.IMMEDIATE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1297,7 +1259,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.INDIRECTR1 | MODE.IMMEDIATE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1307,7 +1269,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R0 | MODE.IMMEDIATE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1317,7 +1279,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R1 | MODE.IMMEDIATE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1327,7 +1289,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R2 | MODE.IMMEDIATE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1337,7 +1299,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R3 | MODE.IMMEDIATE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1347,7 +1309,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R4 | MODE.IMMEDIATE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1357,7 +1319,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R5 | MODE.IMMEDIATE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1367,7 +1329,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R6 | MODE.IMMEDIATE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1377,7 +1339,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R7 | MODE.IMMEDIATE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1387,7 +1349,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1397,7 +1359,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.ADDR11,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1407,7 +1369,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.C, BIT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1417,7 +1379,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A, @A+PC,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1427,7 +1389,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.AB,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1437,7 +1399,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT | MODE.DIRECT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1447,7 +1409,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT | MODE.INDIRECTR0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1457,7 +1419,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT | MODE.INDIRECTR1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1467,7 +1429,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1477,7 +1439,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1487,7 +1449,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R2,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1497,7 +1459,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R3,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1507,7 +1469,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R4,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1517,7 +1479,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R5,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1527,7 +1489,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R6,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1537,7 +1499,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R7,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1547,7 +1509,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DPTR | MODE.IMMEDIATE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1557,7 +1519,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.ADDR11,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1567,7 +1529,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.BIT, C,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1577,7 +1539,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A, @A+DPTR,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1587,7 +1549,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.IMMEDIATE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1597,7 +1559,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.DIRECT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1607,7 +1569,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1617,7 +1579,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1627,7 +1589,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1637,7 +1599,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1647,7 +1609,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R2,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1657,7 +1619,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R3,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1667,7 +1629,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R4,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1677,7 +1639,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R5,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1687,7 +1649,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R6,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1697,7 +1659,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R7,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1707,7 +1669,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.C, /BIT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1717,7 +1679,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.ADDR11,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1727,7 +1689,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.C, BIT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1737,7 +1699,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DPTR,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1747,7 +1709,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.AB,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1757,7 +1719,7 @@ JS51.prototype.opcodes = [
   bytes       : ,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.NONE,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1767,7 +1729,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.INDIRECTR0 | MODE.DIRECT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1777,7 +1739,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.INDIRECTR1 | MODE.DIRECT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1787,7 +1749,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R0 | MODE.DIRECT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1797,7 +1759,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R1 | MODE.DIRECT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1807,7 +1769,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R2 | MODE.DIRECT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1817,7 +1779,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R3 | MODE.DIRECT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1827,7 +1789,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R4 | MODE.DIRECT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1837,7 +1799,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R5 | MODE.DIRECT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1847,7 +1809,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R6 | MODE.DIRECT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1857,7 +1819,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R7 | MODE.DIRECT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1867,7 +1829,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.C, /BIT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1877,7 +1839,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.ADDR11,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1887,7 +1849,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.BIT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1897,7 +1859,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.C,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1907,7 +1869,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.IMMEDIATE | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1917,7 +1879,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.DIRECT | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1927,7 +1889,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.INDIRECTR0 | MODE.IMMEDIATE | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1937,7 +1899,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.INDIRECTR1 | MODE.IMMEDIATE | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1947,7 +1909,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R0 | MODE.IMMEDIATE | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1957,7 +1919,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R1 | MODE.IMMEDIATE | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1967,7 +1929,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R2 | MODE.IMMEDIATE | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1977,7 +1939,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R3 | MODE.IMMEDIATE | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1987,7 +1949,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R4 | MODE.IMMEDIATE | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -1997,7 +1959,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R5 | MODE.IMMEDIATE | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2007,7 +1969,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R6 | MODE.IMMEDIATE | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2017,7 +1979,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R7 | MODE.IMMEDIATE | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2027,7 +1989,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2037,7 +1999,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.ADDR11,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2047,7 +2009,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.BIT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2057,7 +2019,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.C,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2067,7 +2029,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2077,7 +2039,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.DIRECT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2087,7 +2049,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2097,7 +2059,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2107,7 +2069,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2117,7 +2079,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2127,7 +2089,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R2,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2137,7 +2099,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R3,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2147,7 +2109,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R4,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2157,7 +2119,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R5,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2167,7 +2129,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R6,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2177,7 +2139,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R7,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2187,7 +2149,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2197,7 +2159,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.ADDR11,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2207,7 +2169,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.BIT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2217,7 +2179,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.C,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2227,7 +2189,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2237,7 +2199,7 @@ JS51.prototype.opcodes = [
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2247,7 +2209,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2257,7 +2219,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2267,7 +2229,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R0 | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2277,7 +2239,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R1 | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2287,7 +2249,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R2 | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2297,7 +2259,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R3 | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2307,7 +2269,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R4 | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2317,7 +2279,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R5 | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2327,7 +2289,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R6 | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2337,7 +2299,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R7 | MODE.OFFSET,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2347,7 +2309,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A, @DPTR,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2357,7 +2319,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.ADDR11,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2367,7 +2329,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2377,7 +2339,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2387,7 +2349,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2397,7 +2359,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.DIRECT,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2407,7 +2369,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2417,7 +2379,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2427,7 +2389,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R0,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2437,7 +2399,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R1,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2447,7 +2409,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R2,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2457,7 +2419,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R3,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2467,7 +2429,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R4,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2477,7 +2439,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R5,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2487,7 +2449,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R6,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2497,7 +2459,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R7,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2507,7 +2469,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.@DPTR, A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2517,7 +2479,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.ADDR11,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2527,7 +2489,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.INDIRECTR0, A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2537,7 +2499,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.INDIRECTR1, A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2547,7 +2509,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2557,7 +2519,7 @@ JS51.prototype.opcodes = [
   bytes       : 2,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT, A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2567,7 +2529,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.INDIRECTR0, A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2577,7 +2539,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.INDIRECTR1, A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2587,7 +2549,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R0, A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2597,7 +2559,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R1, A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2607,7 +2569,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R2, A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2617,7 +2579,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R3, A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2627,7 +2589,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R4, A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2637,7 +2599,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R5, A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2647,7 +2609,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R6, A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 },
@@ -2657,7 +2619,7 @@ JS51.prototype.opcodes = [
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R7, A,
-  action      : function(machineCode) {
+  execute     : function(machineCode) {
 
   }
 }
@@ -2719,4 +2681,61 @@ Byte.prototype.exchangeBytes = function(other) {
   var otherVal = other.getValue();
   other.setValue(this.getValue());
   return this.setValue(otherVal)
+}
+
+
+var MODE ={
+  // TODO: different instructions can have addressing mode reversed, convert to array instead of bitmap
+  NONE         : 0;
+  ADDR11       : 1 << 0,
+  ADDR16       : 1 << 1,
+  A            : 1 << 2,
+  DIRECT       : 1 << 3,
+  R0           : 1 << 4,
+  R1           : 1 << 5,
+  R2           : 1 << 6,
+  R3           : 1 << 7,
+  R4           : 1 << 8,
+  R5           : 1 << 9,
+  R6           : 1 << 10,
+  R7           : 1 << 11,
+  BIT          : 1 << 12,
+  OFFSET       : 1 << 13,
+  INDIRECTR0   : 1 << 14,
+  INDIRECTR1   : 1 << 15,
+  INDIRECTDPTR : 1 << 16,
+  IMMEDIATE    : 1 << 17
+}
+var REG = {
+  P0    : 0x80, // Port 0
+  SP    : 0x81, // Stack Pointer
+  DPL   : 0x82, // Data pointer low
+  DPH   : 0x83, // Data Pointer High
+  PCON  : 0x87, // Power Control
+  TCON  : 0x88, // Timer Control
+  TMOD  : 0x89, // Timer Mode
+  TL0   : 0x8A, // Timer 0: Low Byte
+  TL1   : 0x8B, // Timer 1: Low Byte
+  TH0   : 0x8C, // Timer 0: High Byte
+  TH1   : 0x8D, // Timer 1: High Byte
+  P1    : 0x90, // Port 1
+  SCON  : 0x98, // Serial Configuration
+  SBUF  : 0x99, // Serial Buffer
+  P2    : 0xA0, // Port 2
+  IE    : 0xA8, // Interrupt Enable
+  P3    : 0xB0, // Port 3
+  IP    : 0xB8, // Interrupt Priority
+  PSW   : 0xD0, // Program Status Word
+  A     : 0xE0, // Accumulator
+  B     : 0xF0  // B Register
+}
+var BIT ={
+  CY   : 0x07,  // Carry flag
+  AC   : 0x06,  // Auxillary Carry Flag (BCD)
+  F0   : 0x05,  // Flag 0 (general purpose)
+  RS1  : 0x04,  // Register Select 1
+  RS0  : 0x03,  // Register Select 0
+  OV   : 0x02,  // Overflow Flag
+  UD   : 0x01,  // User Defined Flag
+  P    : 0x00   // Parity Flag
 }
