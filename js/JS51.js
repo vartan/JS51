@@ -21,7 +21,7 @@ JS51.prototype.decode = function(op) {
   var opcode = this.opcodes[op];
   var machineCode = "";
   for(var i = 0; i < opcode.bytes; i++)
-    machineCode += _ROM[this.PC++];
+    machineCode += this._ROM[this.PC++];
   }
   opcode.execute(machineCode);
 }
