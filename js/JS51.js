@@ -92,7 +92,7 @@ JS51.prototype.opcodes = [
   cycles:1,
   operands: MODE.NONE,
   action: function() {
-    
+
   }
 }
 
@@ -102,23 +102,26 @@ JS51.prototype.opcodes = [
 Byte = function(value) {
   this.setValue(value);
 }
+Byte.prototype.getValue = function() {
+  return this._value;
+}
 Byte.prototype.setValue = function(value) {
   this._value = Math.floor(value % 256);
   return this;
 }
 Byte.prototype.getBit = function(bitNum) {
   if(bitNum > 7) throw "Error: Invalid bit position";
-  return (this._value >> bitNum) & 1;
+  return (this.getValue() >> bitNum) & 1;
 }
 
 Byte.prototype.setBit = function(bitNum) {
   if(bitNum > 7) throw "Error: Invalid bit position";
-  return this.setValue(this._value | (1 << bitNum));
+  return this.setValue(this.getValue() | (1 << bitNum));
 }
 
 Byte.prototype.clearBit = function(bitNum) {
   if(bitNum > 7) throw "Error: Invalid bit position";
-  return this.setValue(this._value & (0xFF &= ~(1 << bitNum)));
+  return this.setValue(this.getValue() & (0xFF &= ~(1 << bitNum)));
 }
 
 Byte.prototype.toggleBit = function(bitNum) {
@@ -127,24 +130,25 @@ Byte.prototype.toggleBit = function(bitNum) {
   else
     return setBit(byte, bitNum);
 }
-Byte.prototype.add = function(other) {
-  return this.setValue(this._value + other._value);
+Byte.prototype.addByte = function(other) {
+  if(isNaN(other))
+    return this.setValue(this.getValue() + other.getValue());
 }
-Byte.prototype.subtract = function(other) {
-  return this.setValue(this._value - other._value);
+Byte.prototype.subtractByte = function(other) {
+  return this.setValue(this.getValue() - other.getValue());
 }
-Byte.prototype.multiply = function(other) {
-  var mulVal = this._value * other._value;
+Byte.prototype.multiplyBytes = function(other) {
+  var mulVal = this.getValue() * other.getValue();
   other.setValue(mulVal/256)
   return this.setValue(mulVal % 256);
 }
-Byte.prototype.divide = function(other) {
-  var divVal = this._value / other._value;
-  other.setValue(this._value%other._value)
+Byte.prototype.divideBytes = function(other) {
+  var divVal = this.getValue() / other.getValue();
+  other.setValue(this.getValue()%other.getValue())
   return this.setValue(divVal);
 }
-Byte.prototype.exchange = function(other) {
-  var otherVal = other._value;
-  other._value = this.value;
-  this.value = otherVal;
+Byte.prototype.exchangeBytes = function(other) {
+  var otherVal = other.getValue();
+  other.setValue(this.getValue());
+  return this.setValue(otherVal)
 }
