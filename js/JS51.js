@@ -1499,7 +1499,7 @@ JS51.prototype.opcodes = [
   operands    : MODE.DIRECT | MODE.IMMEDIATE,
   execute     : function(processor, trailing) {
     var location = parseInt(trailing.substring(0,2));
-    var immediate = parseInt(trailing.substring(2,4)))
+    var immediate = parseInt(trailing.substring(2,4))
     processor.getMemory(location).setValue(immediate);
   }
 },
