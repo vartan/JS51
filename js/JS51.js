@@ -1704,7 +1704,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R0,
   execute     : function(processor, trailing) {
-    var location = parseInt("0x"+trailing))
+    var location = parseInt("0x"+trailing);
     processor.getMemory(location).copyByte(processor.getRegister(0))
   }
 },
@@ -1715,7 +1715,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R1,
   execute     : function(processor, trailing) {
-    var location = parseInt("0x"+trailing))
+    var location = parseInt("0x"+trailing);
     processor.getMemory(location).copyByte(processor.getRegister(1))
   }
 },
@@ -1726,7 +1726,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R2,
   execute     : function(processor, trailing) {
-    var location = parseInt("0x"+trailing))
+    var location = parseInt("0x"+trailing)
     processor.getMemory(location).copyByte(processor.getRegister(2))
   }
 },
@@ -1737,7 +1737,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R3,
   execute     : function(processor, trailing) {
-    var location = parseInt("0x"+trailing))
+    var location = parseInt("0x"+trailing)
     processor.getMemory(location).copyByte(processor.getRegister(3))
   }
 },
@@ -1748,7 +1748,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R4,
   execute     : function(processor, trailing) {
-    var location = parseInt("0x"+trailing))
+    var location = parseInt("0x"+trailing)
     processor.getMemory(location).copyByte(processor.getRegister(4))
   }
 },
@@ -1759,7 +1759,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R5,
   execute     : function(processor, trailing) {
-    var location = parseInt("0x"+trailing))
+    var location = parseInt("0x"+trailing)
     processor.getMemory(location).copyByte(processor.getRegister(5))
   }
 },
@@ -1770,7 +1770,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R6,
   execute     : function(processor, trailing) {
-    var location = parseInt("0x"+trailing))
+    var location = parseInt("0x"+trailing)
     processor.getMemory(location).copyByte(processor.getRegister(6))
   }
 },
@@ -1781,7 +1781,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R7,
   execute     : function(processor, trailing) {
-    var location = parseInt("0x"+trailing))
+    var location = parseInt("0x"+trailing)
     processor.getMemory(location).copyByte(processor.getRegister(7))
   }
 },
@@ -1805,7 +1805,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.ADDR11,
   execute     : function(processor, trailing) {
-    var location = parseInt("0x"+trailing))
+    var location = parseInt("0x"+trailing)
   }
 },
 { // 0x92
