@@ -1477,7 +1477,6 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.INDIRECTADPTR,
   execute     : function(processor, trailing) {
-
   }
 },
 { // 0x74
@@ -1500,7 +1499,7 @@ JS51.prototype.opcodes = [
   execute     : function(processor, trailing) {
     var location = parseInt(trailing.substring(0,2));
     var immediate = parseInt(trailing.substring(2,4))
-    processor.getMemory(location).setValue(immediate);
+    processor.getMemory(location).setValue(immediate)
   }
 },
 { // 0x76
@@ -1511,7 +1510,7 @@ JS51.prototype.opcodes = [
   operands    : MODE.INDIRECTR0 | MODE.IMMEDIATE,
   execute     : function(processor, trailing) {
     var immediate = parseInt("0x"+trailing)
-    processor.registerIndirect(0).setValue(immediate);
+    processor.registerIndirect(0).setValue(immediate)
   }
 },
 { // 0x77
@@ -1650,7 +1649,8 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.AINDIRECTPC,
   execute     : function(processor, trailing) {
-
+    var location = parseInt("0x"+trailing)
+    processor.getA().setValue(processor._ROM[location]);
   }
 },
 { // 0x84
@@ -1670,7 +1670,9 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT | MODE.DIRECT,
   execute     : function(processor, trailing) {
-
+    var location1 = parseInt("0x"+trailing.substring(0,2))
+    var location2 = parseInt("0x"+trailing.substring(2,4))
+    processor.getMemory(location1).copyByte(location2);
   }
 },
 { // 0x86
@@ -1680,7 +1682,8 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT | MODE.INDIRECTR0,
   execute     : function(processor, trailing) {
-
+    var location = parseInt("0x"+trailing)
+    processor.getMemory(location).copyByte(processor.registerIndirect(0));
   }
 },
 { // 0x87
@@ -1690,7 +1693,8 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT | MODE.INDIRECTR1,
   execute     : function(processor, trailing) {
-
+    var location = parseInt("0x"+trailing)
+    processor.getMemory(location).copyByte(processor.registerIndirect(1));
   }
 },
 { // 0x88
@@ -1700,7 +1704,8 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R0,
   execute     : function(processor, trailing) {
-
+    var location = parseInt("0x"+trailing))
+    processor.getMemory(location).copyByte(processor.getRegister(0))
   }
 },
 { // 0x89
@@ -1710,7 +1715,8 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R1,
   execute     : function(processor, trailing) {
-
+    var location = parseInt("0x"+trailing))
+    processor.getMemory(location).copyByte(processor.getRegister(1))
   }
 },
 { // 0x8A
@@ -1720,7 +1726,8 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R2,
   execute     : function(processor, trailing) {
-
+    var location = parseInt("0x"+trailing))
+    processor.getMemory(location).copyByte(processor.getRegister(2))
   }
 },
 { // 0x8B
@@ -1730,7 +1737,8 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R3,
   execute     : function(processor, trailing) {
-
+    var location = parseInt("0x"+trailing))
+    processor.getMemory(location).copyByte(processor.getRegister(3))
   }
 },
 { // 0x8C
@@ -1740,7 +1748,8 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R4,
   execute     : function(processor, trailing) {
-
+    var location = parseInt("0x"+trailing))
+    processor.getMemory(location).copyByte(processor.getRegister(4))
   }
 },
 { // 0x8D
@@ -1750,7 +1759,8 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R5,
   execute     : function(processor, trailing) {
-
+    var location = parseInt("0x"+trailing))
+    processor.getMemory(location).copyByte(processor.getRegister(5))
   }
 },
 { // 0x8E
@@ -1760,7 +1770,8 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R6,
   execute     : function(processor, trailing) {
-
+    var location = parseInt("0x"+trailing))
+    processor.getMemory(location).copyByte(processor.getRegister(6))
   }
 },
 { // 0x8F
@@ -1770,17 +1781,21 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT| MODE.R7,
   execute     : function(processor, trailing) {
-
+    var location = parseInt("0x"+trailing))
+    processor.getMemory(location).copyByte(processor.getRegister(7))
   }
 },
 { // 0x90
   name        : "MOV" ,
-  description : "",
+  description : "Move immediate value to DPTR",
   bytes       : 3,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DPTR | MODE.IMMEDIATE,
   execute     : function(processor, trailing) {
-
+    var immH = parseInt("0x"+trailing.substring(2,4))
+    var immL = parseInt("0x"+trailing.substring(0,2))
+    processor.getMemory(REG.DPH).setValue(immH);
+    processor.getMemory(REG.DPL).setValue(immL);
   }
 },
 { // 0x91
@@ -1790,7 +1805,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.ADDR11,
   execute     : function(processor, trailing) {
-
+    var location = parseInt("0x"+trailing))
   }
 },
 { // 0x92
@@ -2300,7 +2315,9 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A,
   execute     : function(processor, trailing) {
-
+    var a = processor.getA();
+    var aVal = a.getValue();
+    a.setValue(aVal>>4 + ((aVal%16)<<4));
   }
 },
 { // 0xC5
@@ -2480,7 +2497,9 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR0,
   execute     : function(processor, trailing) {
-
+    var a = processor.getA();
+    var other = processor.registerIndirect(0)
+    a.setValue((a.getValue()&0xF0)|(other.getValue()&0x0F));
   }
 },
 { // 0xD7
@@ -2490,7 +2509,9 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR1,
   execute     : function(processor, trailing) {
-
+    var a = processor.getA();
+    var other = processor.registerIndirect(1)
+    a.setValue((a.getValue()&0xF0)|(other.getValue()&0x0F));
   }
 },
 { // 0xD8
@@ -2620,7 +2641,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A,
   execute     : function(processor, trailing) {
-
+    processor.getA().setValue(0);
   }
 },
 { // 0xE5
@@ -2630,7 +2651,8 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.DIRECT,
   execute     : function(processor, trailing) {
-
+    var location = parseInt("0x"+trailing)
+    processor.getA().copyByte(processor.getMemory(location))
   }
 },
 { // 0xE6
@@ -2640,7 +2662,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR0,
   execute     : function(processor, trailing) {
-
+    processor.getA().copyByte(processor.registerIndirect(0))
   }
 },
 { // 0xE7
@@ -2650,7 +2672,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.INDIRECTR1,
   execute     : function(processor, trailing) {
-
+    processor.getA().copyByte(processor.registerIndirect(1))
   }
 },
 { // 0xE8
@@ -2660,7 +2682,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R0,
   execute     : function(processor, trailing) {
-
+    processor.getA().copyByte(processor.getRegister(0))
   }
 },
 { // 0xE9
@@ -2670,7 +2692,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R1,
   execute     : function(processor, trailing) {
-
+    processor.getA().copyByte(processor.getRegister(1))
   }
 },
 { // 0xEA
@@ -2680,7 +2702,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R2,
   execute     : function(processor, trailing) {
-
+    processor.getA().copyByte(processor.getRegister(2))
   }
 },
 { // 0xEB
@@ -2690,7 +2712,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R3,
   execute     : function(processor, trailing) {
-
+    processor.getA().copyByte(processor.getRegister(3))
   }
 },
 { // 0xEC
@@ -2700,7 +2722,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R4,
   execute     : function(processor, trailing) {
-
+    processor.getA().copyByte(processor.getRegister(4))
   }
 },
 { // 0xED
@@ -2710,7 +2732,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R5,
   execute     : function(processor, trailing) {
-
+    processor.getA().copyByte(processor.getRegister(5))
   }
 },
 { // 0xEE
@@ -2720,7 +2742,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R6,
   execute     : function(processor, trailing) {
-
+    processor.getA().copyByte(processor.getRegister(6))
   }
 },
 { // 0xEF
@@ -2730,7 +2752,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A | MODE.R7,
   execute     : function(processor, trailing) {
-
+    processor.getA().copyByte(processor.getRegister(7))
   }
 },
 { // 0xF0
@@ -2780,7 +2802,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.A,
   execute     : function(processor, trailing) {
-
+    processor.getA().complement();
   }
 },
 { // 0xF5
@@ -2790,7 +2812,8 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT | MODE.A,
   execute     : function(processor, trailing) {
-
+    var location parseInt("0x"+trailing);
+    processor.getMemory(location).copyByte(processor.getA());
   }
 },
 { // 0xF6
@@ -2800,7 +2823,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.INDIRECTR0| MODE.A,
   execute     : function(processor, trailing) {
-
+    processor.registerIndirect(0).copyByte(processor.getA())
   }
 },
 { // 0xF7
@@ -2810,7 +2833,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.INDIRECTR1| MODE.A,
   execute     : function(processor, trailing) {
-
+        processor.registerIndirect(1).copyByte(processor.getA())
   }
 },
 { // 0xF8
@@ -2820,7 +2843,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R0| MODE.A,
   execute     : function(processor, trailing) {
-
+    processor.getRegister(0).copyByte(processor.getA())
   }
 },
 { // 0xF9
@@ -2830,7 +2853,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R1| MODE.A,
   execute     : function(processor, trailing) {
-
+    processor.getRegister(1).copyByte(processor.getA())
   }
 },
 { // 0xFA
@@ -2840,7 +2863,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R2| MODE.A,
   execute     : function(processor, trailing) {
-
+    processor.getRegister(2).copyByte(processor.getA())
   }
 },
 { // 0xFB
@@ -2850,6 +2873,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R3| MODE.A,
   execute     : function(processor, trailing) {
+    processor.getRegister(3).copyByte(processor.getA())
 
   }
 },
@@ -2860,6 +2884,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R4| MODE.A,
   execute     : function(processor, trailing) {
+    processor.getRegister(4).copyByte(processor.getA())
 
   }
 },
@@ -2870,7 +2895,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R5| MODE.A,
   execute     : function(processor, trailing) {
-
+    processor.getRegister(5).copyByte(processor.getA())
   }
 },
 { // 0xFE
@@ -2880,17 +2905,17 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R6| MODE.A,
   execute     : function(processor, trailing) {
-
+    processor.getRegister(6).copyByte(processor.getA())
   }
 },
 { // 0xFF
   name        : "MOV" ,
-  description : "",
+  description : "Move A into R7",
   bytes       : 1,
   cycles      : 1, // TODO: get cycles
   operands    : MODE.R7| MODE.A,
   execute     : function(processor, trailing) {
-
+    processor.getRegister(7).copyByte(processor.getA())
   }
 }
 ]
@@ -2921,6 +2946,14 @@ Byte.prototype.setValue = function(value) {
     this.onValueChanged();
   return this;
 }
+
+Byte.prototype.complement = function() {
+  this.setValue(this.getValue())
+}
+Byte.prototype.invert = function() {
+  this.setValue
+}
+
 Byte.prototype.copyByte = function(other) {
   this.setValue(other.getValue())
 }
