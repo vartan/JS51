@@ -2812,7 +2812,7 @@ JS51.prototype.opcodes = [
   cycles      : 1, // TODO: get cycles
   operands    : MODE.DIRECT | MODE.A,
   execute     : function(processor, trailing) {
-    var location parseInt("0x"+trailing);
+    var location = parseInt("0x"+trailing);
     processor.getMemory(location).copyByte(processor.getA());
   }
 },
